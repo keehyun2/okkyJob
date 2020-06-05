@@ -1,16 +1,5 @@
-# flutterapp
 
-A new Flutter application.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. flutter sdk 설치
+2. 안드로이드 스튜디오 설치
+3. 에뮬레이터 설치
+4. flutter doctor 실행해서 안내대로 하기. (toolchain)
