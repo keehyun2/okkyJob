@@ -3,34 +3,36 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterapp/detail_page.dart';
+import 'package:flutterapp/todo.dart';
 import 'package:http/http.dart' as http;
 
-Future<List<okkyJob>> fetchokkyJobs(http.Client client) async {
+Future<List<OKKYJob>> fetchOKKYJobs(http.Client client) async {
   final response =
       await client.get('https://no1-node.herokuapp.com/api/job/list');
 
-  // compute 함수를 사용하여 parseokkyJobs를 별도 isolate에서 수행합니다.
-  return compute(parseokkyJobs, response.body);
+  // compute 함수를 사용하여 parseOKKYJobs를 별도 isolate에서 수행합니다.
+  return compute(parseOKKYJobs, response.body);
 }
 
-// 응답 결과를 List<okkyJob>로 변환하는 함수.
-List<okkyJob> parseokkyJobs(String responseBody) {
+// 응답 결과를 List<OKKYJob>로 변환하는 함수.
+List<OKKYJob> parseOKKYJobs(String responseBody) {
   final parsed = json.decode(responseBody).cast<Map<String, dynamic>>();
 
-  return parsed.map<okkyJob>((json) => okkyJob.fromJson(json)).toList();
+  return parsed.map<OKKYJob>((json) => OKKYJob.fromJson(json)).toList();
 }
 
-class okkyJob {
+class OKKYJob {
   final String articleId;
   final String area;
   final String title;
   final String nickname;
   final String timeago;
 
-  okkyJob({this.articleId, this.area, this.title, this.nickname, this.timeago});
+  OKKYJob({this.articleId, this.area, this.title, this.nickname, this.timeago});
 
-  factory okkyJob.fromJson(Map<String, dynamic> json) {
-    return okkyJob(
+  factory OKKYJob.fromJson(Map<String, dynamic> json) {
+    return OKKYJob(
       articleId: json['article_id'] as String,
       area: json['area'] as String,
       title: json['title'] as String,
@@ -45,10 +47,11 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final appTitle = 'okky.kr 구인 공고';
+    final appTitle = 'OKKY.kr 구인 공고(서울)';
 
     return MaterialApp(
       title: appTitle,
+      theme: ThemeData(primarySwatch: Colors.red),
       home: MyHomePage(title: appTitle),
     );
   }
@@ -62,16 +65,27 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: FutureBuilder<List<okkyJob>>(
-        future: fetchokkyJobs(http.Client()),
+      appBar: AppBar(title: Text(title), actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.refresh),
+          onPressed: () {
+            fetchOKKYJobs(http.Client());
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.alarm),
+          onPressed: () {
+            print(2);
+          },
+        ),
+      ]),
+      body: FutureBuilder<List<OKKYJob>>(
+        future: fetchOKKYJobs(http.Client()),
         builder: (context, snapshot) {
           if (snapshot.hasError) print(snapshot.error);
 
           return snapshot.hasData
-              ? okkyJobsList(okkyJobs: snapshot.data)
+              ? OKKYJobsList(OKKYJobs: snapshot.data)
               : Center(child: CircularProgressIndicator());
         },
       ),
@@ -79,38 +93,41 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-class okkyJobsList extends StatelessWidget {
-  final List<okkyJob> okkyJobs;
+class OKKYJobsList extends StatelessWidget {
+  final List<OKKYJob> OKKYJobs;
 
-  okkyJobsList({Key key, this.okkyJobs}) : super(key: key);
+  OKKYJobsList({Key key, this.OKKYJobs}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: okkyJobs.length,
+      itemCount: OKKYJobs.length,
       itemBuilder: (context, index) {
-//        return Image.network(okkyJobs[index].thumbnailUrl);
         return ListTile(
           dense: false,
-          leading: Hero(
-            child: Text(okkyJobs[index].articleId),
-            tag: "zxc",
-          ),
-          title: Text(okkyJobs[index].title),
-          subtitle: Text(
-            okkyJobs[index].area,
-            style: Theme.of(context).textTheme.caption,
+          leading: Container(
+              width: 55.0,
+              child: Text(OKKYJobs[index].area.replaceAll("서울 ", ""))),
+          title: Text(OKKYJobs[index].title),
+          subtitle: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                OKKYJobs[index].nickname,
+                style: Theme.of(context).textTheme.caption,
+              ),
+              Text(
+                OKKYJobs[index].timeago,
+                style: Theme.of(context).textTheme.caption,
+              )
+            ],
           ),
           onTap: () {
-            print(okkyJobs[index].articleId);
-
-//            var response = http.Client().get("https://okky.kr/recruit/721063");
-
-//            songData.setCurrentIndex(index);
-//            Navigator.push(
-//                context,
-//                new MaterialPageRoute(
-//                    builder: (context) => new NowPlaying(songData, s)));
+            Todo param = Todo(OKKYJobs[index].articleId, OKKYJobs[index].title);
+            Navigator.push(
+                context,
+                new MaterialPageRoute(
+                    builder: (context) => DetailScreen(todo: param)));
           },
         );
       },
